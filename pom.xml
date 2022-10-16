@@ -12,7 +12,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
-    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
 
     <dependencies>
         <dependency>
