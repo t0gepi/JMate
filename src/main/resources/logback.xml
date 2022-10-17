@@ -4,7 +4,7 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="TEXTAREA" class="io.TextAreaAppender"/>
+    <appender name="TEXTAREA" class="io.logging.EditorPaneAppender"/>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>log.txt</file>
         <encoder>

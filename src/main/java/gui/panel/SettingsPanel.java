@@ -8,7 +8,7 @@ import gui.components.select.EngineSelect;
 import gui.components.select.OpeningSelect;
 import gui.components.select.VariantSelect;
 import gui.frame.JMate;
-import io.TextAreaAppender;
+import io.logging.EditorPaneAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JTextArea;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -44,7 +43,6 @@ public class SettingsPanel extends JPanel {
     private JButton startButton;
     private HotkeyButton hotkeyButton;
     private AboutButton aboutButton;
-    private JTextArea textArea;
     private JScrollPane scrollPane;
 
     // ---------------Top Panel---------------
@@ -166,8 +164,7 @@ public class SettingsPanel extends JPanel {
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
         //bottomPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        textArea = TextAreaAppender.fTextArea;
-        scrollPane = new JScrollPane(textArea);
+        scrollPane = new JScrollPane(EditorPaneAppender.editorPane);
         scrollPane.setPreferredSize(new Dimension(jMate.getWidth(), 100));
 
         bottomPanel.add(scrollPane);
