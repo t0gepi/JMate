@@ -1,5 +1,6 @@
 package config;
 
+import gui.frame.JMate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ public final class ConfigManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigManager.class);
 
-    private static final String CONFIG_FILE = "config.properties";
+    private static final String CONFIG_FILE = JMate.CONTENT_ROOT_DIR + "/config.properties";
     private static final Properties PROPERTIES = new Properties();
 
     static{
@@ -40,6 +41,11 @@ public final class ConfigManager {
         } catch (IOException e) {
             LOGGER.error("Error while saving config.properties", e);
         }
+    }
+
+    public static void removeProperty(String key){
+        PROPERTIES.remove(key);
+        LOGGER.info("Removed Property " + key);
     }
 
     private ConfigManager(){}

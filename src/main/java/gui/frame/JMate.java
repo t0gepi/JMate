@@ -1,6 +1,7 @@
 package gui.frame;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import config.ConfigManager;
 import gui.components.button.AboutButton;
 import gui.panel.AboutPanel;
 import gui.panel.PageViewer;
@@ -15,12 +16,18 @@ import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.ObjectInputFilter;
 
 /**
     * Serves as the container of the CardLayout that contains all the panels.
     * Used to call navigate() to switch between views in the CardLayout
  */
 public class JMate extends JPanel implements Navigator {
+    //public static final String CONTENT_ROOT_DIR = System.getProperty("user.dir");
+
+    // When using IntelliJ us this as Content root dir:
+     public static final String CONTENT_ROOT_DIR = "src/main/resources";
+
     private final JFrame frame;
     private View activeView;
     public JPanel settingsPanel;
@@ -90,7 +97,6 @@ public class JMate extends JPanel implements Navigator {
                         else{
                             jMate.navigate(View.SETTINGS);
                             frame.setLocation(AboutButton.frameLocationBeforeClick);
-                            //TODO: stop engine etc.
                         }
                     }
                 });
@@ -100,7 +106,6 @@ public class JMate extends JPanel implements Navigator {
             }
         });
 
-        System.out.println("aasas");
     }
 
 }

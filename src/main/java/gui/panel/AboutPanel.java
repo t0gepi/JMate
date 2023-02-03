@@ -39,7 +39,7 @@ public class AboutPanel extends JPanel {
         //editorPane.setBackground(new Color(111, 111, 142));
         editorPane.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
         try {
-            editorPane.setText(Files.readString(new File("src/main/resources/about.html").toPath(), StandardCharsets.UTF_8));
+            editorPane.setText(Files.readString(new File(JMate.CONTENT_ROOT_DIR + "/about.html").toPath(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

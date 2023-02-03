@@ -32,19 +32,15 @@ public class EditorPaneAppender extends AppenderBase<ILoggingEvent> {
                 .replace("</p>","");
 
 
-        String colored_level_template = "";
-
-        switch (e.getLevel().toInt()) {
-            case 20000: //info
-                colored_level_template = "<span style=\"color:2259E3FF\">%s</span>";
-                break;
-            case 30000: //warn
-                colored_level_template = "<span style=\"color:E38E0AFF\">%s</span>";
-                break;
-            case 40000: //error
-                colored_level_template = "<span style=\"color:E71019FF\">%s</span>";
-                break;
-        }
+        String colored_level_template = switch (e.getLevel().toInt()) {
+            case 20000 -> //info
+                    "<span style=\"color:2259E3FF\">%s</span>";
+            case 30000 -> //warn
+                    "<span style=\"color:orange\">%s</span>";
+            case 40000 -> //error
+                    "<span style=\"color:red\">%s</span>";
+            default -> "";
+        };
 
         editorPane.setText(txt + String.format("<span>[%s]</span> %s - %s"
                 , sdf.format(new Date(e.getTimeStamp()))

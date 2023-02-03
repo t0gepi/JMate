@@ -1,17 +1,22 @@
 <configuration>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+
     <appender name="TEXTAREA" class="io.logging.EditorPaneAppender"/>
+
+    <define name="contentRootDir" class="io.logging.ContentRootDirPropertyDefiner"/>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>log.txt</file>
+        <file>${contentRootDir}/log.txt</file>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="debug">
+
+    <root level="info">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
         <appender-ref ref="TEXTAREA" />

@@ -1,5 +1,6 @@
 package gui.components.select;
 
+import config.ConfigManager;
 import io.engine.Engine;
 import io.engine.Opening;
 import io.engine.Variant;
@@ -8,6 +9,7 @@ import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Optional;
 
 public class VariantSelect extends JComboBox<String> {
 
@@ -18,7 +20,12 @@ public class VariantSelect extends JComboBox<String> {
 
     public VariantSelect(){
         VARIANTS.forEach(this::addItem);
-        addActionListener(new VariantChangeListener());
+        String variant = ConfigManager.getProperty("variant");
+        if(variant != null){
+            Optional<Variant> e = VARIANTS.stream().filter(variant1 -> variant1.name().equals(variant)).findFirst();
+            e.ifPresent(value -> setSelectedIndex(VARIANTS.indexOf(value)));
+        }
+        addActionListener(new VariantChangeListener(this));
     }
 
     private void addItem(Variant variant) {
@@ -35,7 +42,6 @@ public class VariantSelect extends JComboBox<String> {
 
     public void select(Variant variant){
         setSelectedIndex(VARIANTS.indexOf(variant));
-        //TODO: store selected variant in config
     }
 
     public Variant getSelectedVariant(){
@@ -43,8 +49,15 @@ public class VariantSelect extends JComboBox<String> {
     }
 
     private class VariantChangeListener implements ActionListener {
+
+        private final VariantSelect variantSelect;
+        public VariantChangeListener(VariantSelect variantSelect) {
+            this.variantSelect = variantSelect;
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
+            ConfigManager.setProperty("variant", VARIANTS.get(variantSelect.getSelectedIndex()).name());
             if(getSelectedIndex() != VARIANTS.indexOf(Variant.Chess)){
                 engineSelect.select(Engine.FairyStockfish);
                 openingSelect.select(Opening.Engine);

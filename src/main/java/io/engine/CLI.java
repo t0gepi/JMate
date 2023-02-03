@@ -1,61 +1,94 @@
 package io.engine;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.errorprone.annotations.Var;
+import config.ConfigManager;
+import gui.components.button.HotkeyButton;
+import gui.frame.JMate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.EnumMap;
+import java.util.List;
 
 /**
- * Used to communicate with the commandline interface of the engine.
- * The engine is started as a separate process and the communication is done via stdin and stdout.
+ *  The Command Line Interface (CLI) reads and writes to the engine.
  */
-public class CLI {
+public final class CLI {
 
-    private static final Logger logger;
     private static Process process;
     private static BufferedReader processReader;
     private static OutputStreamWriter processWriter;
-    private static EnumMap<Engine,String> engine;
-    private static Engine activeEngine;
+
+    private static Opening opening;
+    private static Variant variant;
 
     private CLI(){}
 
-    static{
-        logger = LoggerFactory.getLogger(CLI.class);
-        engine = new EnumMap<>(Engine.class);
-        engine.put(Engine.Stockfish, "io/engine/stockfish/stockfish.exe");
-        engine.put(Engine.FairyStockfish, "io/engine/stockfish/fairystockfish.exe");
-        engine.put(Engine.Lc0, "io/engine/lc0/lc0.exe");
-    }
-
-
-    public static void start(){
-        if(process != null)
-            process.destroy();
-        try {
-            process = Runtime.getRuntime().exec(engine.get(activeEngine));
-        } catch (IOException e) {
-            logger.error("Error while starting engine " + activeEngine.toString(), e);
-        }
+    public static void startNewProcess() throws IOException {
+        killProcess();
+        String engine = ConfigManager.getProperty("engine");
+        String ENGINE_PATH = String.format(JMate.CONTENT_ROOT_DIR + "/engine/%s/%s.exe", engine, engine);
+        process = Runtime.getRuntime().exec(ENGINE_PATH);
         processReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         processWriter = new OutputStreamWriter(process.getOutputStream());
+
+        variant = Variant.getByName(ConfigManager.getProperty("variant"));
+        opening = Opening.getByName(ConfigManager.getProperty("opening"));
+
+        //TODO: if variant != chess write "setoption name UCI_Variant value <variantname>"
+
     }
 
-    public static void stop(){
-        if(process != null){
+    public static boolean isProcessAlive(){
+        return process != null && process.isAlive();
+    }
+
+    public static void killProcess(){
+        if(process != null)
             process.destroy();
-            logger.info("Engine " + activeEngine.toString() + " stopped");
+    }
+
+    public static void sendCommand(String command) {
+        try {
+            processWriter.write(command + "\n");
+            processWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-
-    public static void setEngine(Engine engine){
-        activeEngine = engine;
+    public static String getBestMoveForDepth(List<String> moveHistory, int depth) throws IOException {
+        //TODO: if a preferred opening is selected, try to play it for the first 4 moves. Create some Opening data for first 4 moves.
+        if(moveHistory.size() != 0){
+            sendCommand("ucinewgame\n");
+            StringBuilder command = new StringBuilder();
+            command.append("position startpos moves ");
+            for(String move : moveHistory){         // building a large string like "position startpos move e2e4 e7e5" is easier than calculating the FEN String
+                command.append(move).append(" ");
+            }
+            sendCommand(command + "\n");
+            sendCommand(String.format("go depth %s\n", depth));
+        }
+        else{
+            sendCommand("ucinewgame\n");
+            sendCommand(String.format("position startpos \ngo depth %d\n",depth));
+        }
+        return waitForBestMove();
     }
 
+
+    private static String waitForBestMove() throws IOException {
+        String line = processReader.readLine();
+        System.out.println(line);
+        while(!line.startsWith("bestmove")){
+            if(HotkeyButton.wasPressed){
+                sendCommand("stop\n");
+            }
+            line = processReader.readLine();
+            System.out.println(line);
+        }
+        return line.split("\\s+")[1];
+    }
 
 }

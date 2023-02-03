@@ -1,5 +1,7 @@
 package gui.panel;
 
+import bot.StartStopListener;
+import config.ConfigManager;
 import gui.components.LabeledComponent;
 import gui.components.button.AboutButton;
 import gui.components.button.HotkeyButton;
@@ -8,21 +10,19 @@ import gui.components.select.EngineSelect;
 import gui.components.select.OpeningSelect;
 import gui.components.select.VariantSelect;
 import gui.frame.JMate;
+import io.engine.Engine;
+import io.engine.Opening;
+import io.engine.Variant;
 import io.logging.EditorPaneAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Settings Panel is divided in top and bottom Panel. Top Panel contains all Components to configure the bot.
@@ -95,20 +95,63 @@ public class SettingsPanel extends JPanel {
         // init components for topPanel
         engineSelect = new LabeledComponent<>("Engine", new EngineSelect(), LabeledComponent.LabelPosition.North);
         variantSelect = new LabeledComponent<>("Variant", new VariantSelect(), LabeledComponent.LabelPosition.North);
+        if(variantSelect.getComponent().getSelectedVariant() != Variant.Chess && engineSelect.getComponent().getSelectedEngine() != Engine.FairyStockfish){
+            LOGGER.error("Invalid combination of Engine and Variant");
+        }
         openingSelect = new LabeledComponent<>("Opening", new OpeningSelect(), LabeledComponent.LabelPosition.North);
+        if(openingSelect.getComponent().getSelectedOpening() != Opening.Engine && variantSelect.getComponent().getSelectedVariant() != Variant.Chess){
+            LOGGER.error("Invalid combination of Opening and Variant");
+        }
 
-        depthSlider = new LabeledComponent<>("Depth", new JSlider(1, 21, 11), LabeledComponent.LabelPosition.North);
+        String depthValue = ConfigManager.getProperty("depth");
+        depthSlider = new LabeledComponent<>("Depth " + depthValue , new JSlider(1, 21, Integer.parseInt(depthValue)), LabeledComponent.LabelPosition.North);
         depthSlider.getComponent().setForeground(new Color(0, 174, 255));
-        startButton = new JButton("Start");
-        startButton.addActionListener(e -> {
-            LOGGER.info("Start Button clicked");
-            //TODO: start Engine etc.
+        depthSlider.getComponent().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                depthSlider.getLabel().setText("Depth " + depthSlider.getComponent().getValue());
+            }
         });
+        depthSlider.getComponent().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                ConfigManager.setProperty("depth", String.valueOf(depthSlider.getComponent().getValue()));
+            }
+        });
+
+        startButton = new JButton("Start");
+        startButton.addActionListener(new StartStopListener(this));
+
+
 
         autoplaySwitch = new LabeledComponent<>("  Autoplay", new SwitchButton(), LabeledComponent.LabelPosition.East);
         arrowsSwitch = new LabeledComponent<>("  Arrows          ", new SwitchButton(), LabeledComponent.LabelPosition.East);
-        hotkeyButton = new HotkeyButton();
 
+        boolean autoplay = ConfigManager.getProperty("autoplay").equalsIgnoreCase("true");
+        boolean arrows = ConfigManager.getProperty("arrows").equalsIgnoreCase("true");
+        autoplaySwitch.getComponent().setSelected(autoplay);
+        arrowsSwitch.getComponent().setSelected(arrows);
+
+        if(autoplaySwitch.getComponent().isSelected() && arrowsSwitch.getComponent().isSelected()){
+            LOGGER.error("Invalid combination of autoplay and arrows");
+        }
+
+        autoplaySwitch.getComponent().addEventSelected(selected -> {
+            if(selected){
+                arrowsSwitch.getComponent().setSelected(false);
+            }
+            ConfigManager.setProperty("autoplay", autoplaySwitch.getComponent().isSelected()+"");
+        });
+        arrowsSwitch.getComponent().addEventSelected(selected -> {
+            if(selected){
+                autoplaySwitch.getComponent().setSelected(false);
+            }
+            ConfigManager.setProperty("arrows", arrowsSwitch.getComponent().isSelected()+"");
+        });
+
+
+        hotkeyButton = new HotkeyButton();
         aboutButton = new AboutButton(jMate);
 
 
@@ -117,6 +160,10 @@ public class SettingsPanel extends JPanel {
         engineSelect.getComponent().setOpeningSelect(openingSelect.getComponent());
         variantSelect.getComponent().setEngineSelect(engineSelect.getComponent());
         variantSelect.getComponent().setOpeningSelect(openingSelect.getComponent());
+
+        if(variantSelect.getComponent().getSelectedVariant() != Variant.Chess){
+            openingSelect.getComponent().setEnabled(false);
+        }
 
 
         // Styling
@@ -169,6 +216,45 @@ public class SettingsPanel extends JPanel {
 
         bottomPanel.add(scrollPane);
     }
+
+
+    // getter for components that StartStopListener needs
+
+    public JButton getStartButton(){
+        return startButton;
+    }
+
+    public EngineSelect getEngineSelect(){
+        return engineSelect.getComponent();
+    }
+
+    public OpeningSelect getOpeningSelect(){
+        return openingSelect.getComponent();
+    }
+
+    public VariantSelect getVariantSelect(){
+        return variantSelect.getComponent();
+    }
+
+    public HotkeyButton getHotkeyButton(){
+        return hotkeyButton;
+    }
+
+
+    // getter for components that lichess bot needs
+
+    public JSlider getDepthSlider(){
+        return depthSlider.getComponent();
+    }
+
+    public SwitchButton getAutoplaySwitch(){
+        return autoplaySwitch.getComponent();
+    }
+
+    public SwitchButton getArrowsSwitch(){
+        return arrowsSwitch.getComponent();
+    }
+
 
 
 }

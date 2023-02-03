@@ -1,5 +1,6 @@
 package gui.components.select;
 
+import config.ConfigManager;
 import io.engine.CLI;
 import io.engine.Engine;
 import io.engine.Opening;
@@ -9,8 +10,8 @@ import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Optional;
 
-;
 
 public class EngineSelect extends JComboBox<String> {
 
@@ -21,8 +22,12 @@ public class EngineSelect extends JComboBox<String> {
 
     public EngineSelect(){
         ENGINES.forEach(this::addItem);
-        addActionListener(new EngineChangeListener());
-        CLI.setEngine(ENGINES.get(getSelectedIndex()));
+        String engine = ConfigManager.getProperty("engine");
+        if(engine != null){
+            Optional<Engine> e = ENGINES.stream().filter(engine1 -> engine1.name().equals(engine)).findFirst();
+            e.ifPresent(value -> setSelectedIndex(ENGINES.indexOf(value)));
+        }
+        addActionListener(new EngineChangeListener(this));
     }
 
     private void addItem(Engine engine) {
@@ -39,12 +44,22 @@ public class EngineSelect extends JComboBox<String> {
 
     public void select(Engine engine){
         setSelectedIndex(ENGINES.indexOf(engine));
-        //TODO: store selected engine in config
+    }
+
+    public Engine getSelectedEngine(){
+        return ENGINES.get(getSelectedIndex());
     }
 
     private class EngineChangeListener implements ActionListener{
+
+        private final EngineSelect engineSelect;
+        public EngineChangeListener(EngineSelect engineSelect) {
+            this.engineSelect = engineSelect;
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
+            ConfigManager.setProperty("engine", ENGINES.get(engineSelect.getSelectedIndex()).name());
             if(getSelectedIndex() != ENGINES.indexOf(Engine.FairyStockfish)){
                 variantsSelect.select(Variant.Chess);
                 openingSelect.setEnabled(true);
